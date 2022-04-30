@@ -4,29 +4,40 @@ import time
 pygame.init()
 
 font_style = pygame.font.SysFont(None, 50)
-dis_width = 800
-dis_height = 600
-snake_block = 10
+dis_width = 400
+dis_height = 400
+snake_block = 20
 white = (255, 255, 255)
 black = (0, 0, 0)
 red = (255, 0, 0)
 blue = (0, 0, 255)
 green = (0, 255, 0)
-snack_speed = 100
+gray = (20, 20, 20)
+dark_gray = (15, 15, 15)
+snack_speed = 15
 clock = pygame.time.Clock()
+
+def draw_surface():
+    dis.fill(dark_gray)
+
+def draw_grid():
+    for i in range(0, dis_width, snake_block):
+        pygame.draw.line(dis, gray, (i, 0), (i, dis_height))
+        pygame.draw.line(dis, gray, (0, i), (dis_width, i))
+
 
 def draw_path(paths, goal, start):
     curr = tuple(goal)
-    while paths[curr] != tuple(start):
+    while curr != tuple(start):
         pygame.draw.rect(dis, green, [paths[curr][0], paths[curr][1], snake_block, snake_block])
-        print(paths)
-        curr = paths[curr]
+        print(paths[curr])
+        curr = tuple(paths[curr])
 
 def bfs(snake_list, start, goal, obstacles):
     visited = []
     queue = []
     paths = {}
-    dvs = [[10, 0], [0, 10], [-10, 0], [0, -10]]
+    dvs = [[snake_block, 0], [0, snake_block], [-snake_block, 0], [0, -snake_block]]
 
     visited.append(start)
     queue.append(start)
@@ -41,13 +52,13 @@ def bfs(snake_list, start, goal, obstacles):
             if newnode not in obstacles and newnode not in snake_list and newnode not in visited and newnode != [dis_width, dis_height]:
                 queue.append([node[0] + dv[0], node[1] + dv[1]])
                 visited.append([node[0] + dv[0], node[1] + dv[1]])
-                paths[tuple(newnode)] = tuple(node)
+                paths[tuple(newnode)] = node
 
-    draw_path(paths, goal, snake_list[-1])
+    draw_path(paths, goal, start)
 
 def draw_snake(snake):
     for pos in snake:
-        pygame.draw.rect(dis, black, [pos[0], pos[1], snake_block, snake_block])
+        pygame.draw.rect(dis, white, [pos[0], pos[1], snake_block, snake_block])
 
 def hit_self(head, snake):
     for body in snake[:-1]:
@@ -71,6 +82,16 @@ def draw_obstacles(obstacles):
     for obstacle in obstacles:
         pygame.draw.rect(dis, blue, [obstacle[0], obstacle[1], snake_block, snake_block])
 
+def generate_food(snake_list, obstacles):
+    foodx = round(random.randrange(0, dis_width - snake_block) / snake_block) * snake_block
+    foody = round(random.randrange(0, dis_height - snake_block) / snake_block) * snake_block
+    while True:
+        foodx = round(random.randrange(0, dis_width - snake_block) / snake_block) * snake_block
+        foody = round(random.randrange(0, dis_height - snake_block) / snake_block) * snake_block
+
+        if [foodx, foody] not in snake_list and [foodx, foody] not in obstacles:
+            return [foodx, foody]
+
 dis = pygame.display.set_mode((dis_width, dis_height))
 pygame.display.update()
 pygame.display.set_caption("Snake Solver")
@@ -83,18 +104,17 @@ def gameLoop():
     y1 = dis_width/2
     dx = 0
     dy = 0
-
-    foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10
-    foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10
+    paths = {}
 
     snake_list = []
+    obstacles = []
     length_of_snake = 1
 
-    obstacles = []
+    food = generate_food(snake_list, obstacles)
 
-    for i in range(0, 20):
-        x = random.randrange(0, dis_width, 10)
-        y = random.randrange(0, dis_height, 10)
+    for i in range(0, 10):
+        x = random.randrange(0, dis_width, snake_block)
+        y = random.randrange(0, dis_height, snake_block)
         obstacles.append([x, y])
 
     while not game_over:
@@ -117,17 +137,17 @@ def gameLoop():
                 game_over = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT and dx == 0:
-                    dx = -10
+                    dx = -snake_block
                     dy = 0
                 elif event.key == pygame.K_RIGHT and dx == 0:
-                    dx = 10
+                    dx = snake_block
                     dy = 0
                 elif event.key == pygame.K_UP and dy == 0:
                     dx = 0
-                    dy = -10
+                    dy = -snake_block
                 elif event.key == pygame.K_DOWN and dy == 0:
                     dx = 0
-                    dy = 10
+                    dy = snake_block
 
 
         x1 += dx
@@ -138,8 +158,6 @@ def gameLoop():
         snake_head.append(x1)
         snake_head.append(y1)
         snake_list.append(snake_head)
-
-        bfs(snake_list, snake_list[-1], [foodx, foody], obstacles)
 
         print(snake_list)
 
@@ -155,21 +173,30 @@ def gameLoop():
         if hit_boundaries(snake_head):
             game_close = True
 
+        #draw surface
+        draw_surface()
+
+        #draw grid
+        draw_grid()
+
         #draw obstacles
         draw_obstacles(obstacles)
+
+        #draw food
+        pygame.draw.rect(dis, red, [food[0], food[1], snake_block, snake_block])
+
+        #draw paths
+        bfs(snake_list, snake_head, food, obstacles)
 
         #draw snake
         draw_snake(snake_list)
 
-        #draw food
-        pygame.draw.rect(dis, red, [foodx, foody, snake_block, snake_block])
-
         pygame.display.update()
 
-        if x1 == foodx and y1 == foody:
-            foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10
-            foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10
+        if x1 == food[0] and y1 == food[1]:
+            food = generate_food(snake_list, obstacles)
             length_of_snake += 1
+
         clock.tick(snack_speed)
 
 gameLoop()
