@@ -163,6 +163,14 @@ dis = pygame.display.set_mode((dis_width, dis_height))
 pygame.display.update()
 pygame.display.set_caption("Snake Solver")
 
+click = False
+
+def button_rect():
+    button_1 = pygame.Rect(300,300,200,50)
+    button_2 = pygame.Rect(300,400,200,50)
+    pygame.draw.rect(surface,(red), button_1)
+    pygame.draw.rect(surface,(red), button_2)
+
 def menuLoop():
     goto_gameplay = False
     exit_game = False
@@ -171,19 +179,29 @@ def menuLoop():
         if goto_gameplay:
             gameLoop(0)
 
-        message("Press S to Start!", red, [dis_width / 3 + 60, dis_width / 5])
-
+        message("WELCOME", red, [310 , 200])
+        mx,my = pygame.mouse.get_pos()
+        button_1 = pygame.Rect(300,300,200,50)
+        button_2 = pygame.Rect(300,400,200,50)
+        button_rect()
+        message("Play", white, [365 , 307])
+        message("Quit", white, [365 , 407])
+        if button_1.collidepoint((mx,my)):
+            if click:
+                goto_gameplay = True
+        if button_2.collidepoint((mx,my)):
+            if click:
+                exit_game = True
         pygame.display.update()
 
+        click = False
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
+                if event.key == pygame.K_ESCAPE:
                     exit_game = True
-                elif event.key == pygame.K_s:
-                    mixer.music.load("res/y2mate.com - Wii Music  Gaming Background Music HD.mp3")
-                    mixer.music.play()
-                    goto_gameplay = True
-
+            if event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    click = True
 def gameLoop(level):
     game_over = False
     game_close = False
@@ -321,6 +339,10 @@ def gameLoop(level):
         pygame.display.update()
 
         clock.tick(snack_speed)
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
 
 mixer.init()
 mixer.music.load("res/y2mate.com - Game Show Tv Theme Music.mp3")
