@@ -3,6 +3,7 @@ import pygame
 from pygame.locals import *
 from pygame import mixer
 pygame.init()
+surface = pygame.display.set_mode((600, 400))
 
 font_style = pygame.font.SysFont(None, 50)
 dis_width = 800
