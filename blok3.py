@@ -82,7 +82,7 @@ def get_direction(closest_path, snake_head):
 def get_path_to_food(snake_list, food, obstacles):
     return bfs(snake_list, snake_list[-1], food, obstacles)
 
-def get_path_to_tail(snake_list, obstacles):
+def get_path_to_tail(snake_list, obstacles, real_snake):
     visited = []
     queue = []
     paths = {}
@@ -102,7 +102,7 @@ def get_path_to_tail(snake_list, obstacles):
 
         for dv in dvs:
             newnode = [node[0] + dv[0], node[1] + dv[1]]
-            if newnode not in obstacles and newnode not in withoutTail and newnode not in visited and not hit_boundaries(newnode):
+            if newnode not in obstacles and newnode not in snake_list and newnode not in visited and not hit_boundaries(newnode):
                 queue.append([node[0] + dv[0], node[1] + dv[1]])
                 visited.append([node[0] + dv[0], node[1] + dv[1]])
                 paths[tuple(newnode)] = node
@@ -184,8 +184,8 @@ def draw_actualpath(paths):
 
 def pathIsSafe(snake_list, paths, food, obstacles):
     virtual_snake = deepcopy(snake_list)
-    x1 = virtual_snake[0][0]
-    y1 = virtual_snake[0][1]
+    x1 = virtual_snake[-1][0]
+    y1 = virtual_snake[-1][1]
 
     for path in paths:
         dv = get_direction(path ,virtual_snake[-1])
@@ -193,10 +193,11 @@ def pathIsSafe(snake_list, paths, food, obstacles):
         y1 += dv[1]
 
         snake_head = [x1, y1]
-        virtual_snake.append(snake_head)
         del virtual_snake[0]
+        virtual_snake.append(snake_head)
+        
 
-    pathToTail = get_path_to_tail(virtual_snake, obstacles)
+    pathToTail = get_path_to_tail(virtual_snake, obstacles,snake_list)
     if len(virtual_snake) > 1:
         print("snake head: ", virtual_snake[-1], "snake tail: ", virtual_snake[0])
     print(pathToTail)
@@ -241,8 +242,8 @@ def menuLoop():
         message("Quit", white, [365 , 407])
         if button_1.collidepoint((mx,my)):
             if click:
-                mixer.music.load("res/y2mate.com - Wii Music  Gaming Background Music HD.mp3")
-                mixer.music.play()
+                # mixer.music.load("res/y2mate.com - Wii Music  Gaming Background Music HD.mp3")
+                # mixer.music.play()
                 goto_gameplay = True
         if button_2.collidepoint((mx,my)):
             if click:
@@ -307,8 +308,8 @@ def gameLoop(level):
                         game_close = False
                         exit()
                     if event.key == pygame.K_c:
-                        mixer.music.load("res/y2mate.com - Wii Music  Gaming Background Music HD.mp3")
-                        mixer.music.play()
+                        # mixer.music.load("res/y2mate.com - Wii Music  Gaming Background Music HD.mp3")
+                        # mixer.music.play()
                         gameLoop(0)
 
         # for event in pygame.event.get():
@@ -336,6 +337,9 @@ def gameLoop(level):
         x1 += dv[0]
         y1 += dv[1]
         dis.fill(white)
+        
+        if len(snake_list) > length_of_snake:
+            del snake_list[0]
 
         snake_head = []
         snake_head.append(x1)
@@ -350,9 +354,9 @@ def gameLoop(level):
         curr_path = get_path_to_food(snake_list, food, obstacles)
         isSafe = pathIsSafe(snake_list, curr_path, food, obstacles)
         print("is safe path", isSafe)
-        if len(isSafe) == 0:
+        if len(isSafe) == 0 or curr_path == []:
             print("MASUKKKK")
-            curr_path = get_path_to_tail(snake_list, obstacles)
+            curr_path = get_path_to_tail(snake_list, obstacles,snake_list)
 
         # if len(curr_path) == 0:
         #     print("random move")
@@ -364,8 +368,7 @@ def gameLoop(level):
             print("game over")
             game_close = True
 
-        if len(snake_list) > length_of_snake:
-            del snake_list[0]
+        
 
         if hit_self(snake_head, snake_list):
             game_close = True
@@ -406,8 +409,8 @@ def gameLoop(level):
         clock.tick(snack_speed)
 
 mixer.init()
-mixer.music.load("res/y2mate.com - Game Show Tv Theme Music.mp3")
-mixer.music.play()
+# mixer.music.load("res/y2mate.com - Game Show Tv Theme Music.mp3")
+# mixer.music.play()
 menuLoop()
 
 pygame.quit()
